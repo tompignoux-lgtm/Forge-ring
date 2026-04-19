@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Forge / Ring">
+<meta name="theme-color" content="#0F0D0B">
+<title>Forge / Ring — Programme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+  html, body { overscroll-behavior: none; }
+  body {
+    background: #0F0D0B;
+    color: #EDE6DC;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
+    padding-top: env(safe-area-inset-top);
+    min-height: 100vh;
+  }
+  .display-font { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.02em; }
+  .mono-font { font-family: 'JetBrains Mono', monospace; }
+
+  .grain::before {
+    content: ""; position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.25'/></svg>");
+    opacity: 0.4; pointer-events: none; z-index: 100; mix-blend-mode: overlay;
+  }
+
+  header {
+    padding: 28px 20px 16px;
+    border-bottom: 1px solid #1E1A16;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .header-label { font-size: 10px; color: #6B6258; letter-spacing: 0.15em; text-transform: uppercase; }
+  h1 { font-size: 38px; margin-top: 4px; line-height: 0.95; }
+  .header-icon {
+    width: 44px; height: 44px;
+    border: 1px solid #2A2520;
+    display: flex; align-items: center; justify-content: center;
+    color: #F47C4A;
+  }
+
+  .day-selector {
+    padding: 16px 12px;
+    display: flex; gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .day-selector::-webkit-scrollbar { display: none; }
+  .day-pill {
+    flex-shrink: 0;
+    min-width: 56px;
+    padding: 10px 8px;
+    background: transparent;
+    border: 1px solid #2A2520;
+    color: #EDE6DC;
+    cursor: pointer;
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.05em;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  .day-pill:active { transform: scale(0.95); }
+  .day-pill.active { color: #0F0D0B; }
+  .day-pill.rest { color: #6B6258; }
+  .day-pill.today { border-color: #F47C4A; }
+  .day-pill .j-label { font-size: 10px; opacity: 0.7; }
+  .day-pill .day-short { font-size: 18px; margin-top: 2px; }
+  .today-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: #F47C4A;
+    margin: 3px auto 0;
+  }
+
+  .content { padding: 0 20px; }
+
+  .session-header {
+    padding: 20px 0 16px;
+    border-bottom: 1px solid #1E1A16;
+  }
+  .session-top { display: flex; align-items: flex-start; gap: 14px; }
+  .session-icon {
+    width: 44px; height: 44px;
+    color: #0F0D0B;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .session-meta { font-size: 11px; letter-spacing: 0.1em; }
+  .session-title { font-size: 26px; margin-top: 2px; line-height: 1.05; }
+
+  .progress-wrap { margin-top: 16px; }
+  .progress-labels {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+  .progress-label { font-size: 10px; color: #6B6258; letter-spacing: 0.1em; }
+  .progress-count { font-size: 11px; }
+  .progress-track { height: 2px; background: #1E1A16; overflow: hidden; }
+  .progress-fill { height: 100%; width: 0; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  .block { margin-top: 28px; }
+  .block-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 14px;
+  }
+  .block-num { font-size: 14px; color: #6B6258; letter-spacing: 0.15em; }
+  .block-line { flex: 1; height: 1px; background: #1E1A16; }
+  .block-duration { font-size: 10px; color: #6B6258; letter-spacing: 0.1em; }
+  .block-name { font-size: 22px; margin-bottom: 12px; letter-spacing: 0.02em; }
+
+  .exo-row {
+    padding: 14px 0;
+    border-bottom: 1px solid #1E1A16;
+    display: flex; gap: 14px;
+    align-items: flex-start;
+    transition: background 0.2s ease;
+  }
+  .exo-row:active { background: rgba(244, 124, 74, 0.08); }
+
+  .checkbox {
+    width: 22px; height: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    border: 1.5px solid #3A332D;
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .checkbox.done { }
+  .checkbox svg { display: none; }
+  .checkbox.done svg { display: block; }
+
+  .exo-body { flex: 1; min-width: 0; }
+  .exo-name { font-size: 15px; font-weight: 500; color: #EDE6DC; line-height: 1.3; }
+  .exo-name.done { color: #6B6258; text-decoration: line-through; }
+  .exo-scheme { font-size: 12px; margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+  .exo-scheme.done { opacity: 0.5; }
+  .exo-note { font-size: 11px; color: #8B8680; margin-top: 3px; font-style: italic; }
+
+  .load-wrap {
+    margin-top: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .load-label { font-size: 10px; color: #6B6258; letter-spacing: 0.1em; font-family: 'JetBrains Mono', monospace; }
+  .load-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed #3A332D;
+    color: #EDE6DC;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    width: 56px;
+    padding: 2px 4px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .load-input:focus { border-bottom-color: #F47C4A; }
+  .load-input::placeholder { color: #5A5248; }
+  .load-unit { font-size: 10px; color: #5A5248; font-family: 'JetBrains Mono', monospace; }
+
+  .nav-row {
+    margin-top: 40px;
+    display: flex; gap: 10px;
+  }
+  .nav-btn {
+    flex: 1;
+    padding: 14px;
+    border: 1px solid #2A2520;
+    color: #EDE6DC;
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+  }
+  .nav-btn.primary { color: #0F0D0B; font-weight: 600; }
+
+  .footer-note {
+    margin-top: 32px;
+    padding: 16px;
+    background: #16120E;
+    border: 1px solid #1E1A16;
+  }
+  .footer-title { font-size: 10px; color: #F47C4A; letter-spacing: 0.15em; margin-bottom: 6px; font-family: 'JetBrains Mono', monospace; }
+  .footer-text { font-size: 12px; color: #A39989; line-height: 1.5; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: slideUp 0.3s ease forwards; }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header>
+  <div>
+    <div class="header-label mono-font">Programme · 5 séances</div>
+    <h1 class="display-font">FORGE <span style="color:#F47C4A">/</span> RING</h1>
+  </div>
+  <div class="header-icon">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/></svg>
+  </div>
+</header>
+
+<div class="day-selector" id="daySelector"></div>
+
+<div class="content" id="content"></div>
+
+<script>
+const SESSIONS = [
+  {
+    id: "mon", day: "LUN", dayFull: "Lundi",
+    title: "Push + Boxe technique", duration: "75-90 min",
+    icon: "push", accent: "#F47C4A",
+    blocks: [
+      { name: "Bloc force", duration: "45 min", exercises: [
+        { id: "dips_l", name: "Dips lestés", scheme: "4 × 5-6", note: "RPE 8, progression +1-2 kg/sem", tracked: true },
+        { id: "archer", name: "Pompes archer ou déclinées", scheme: "3 × 6-8 / côté", tracked: false },
+        { id: "dev_mil", name: "Développé militaire haltères", scheme: "4 × 6-8", tracked: true },
+        { id: "diamant", name: "Pompes diamant", scheme: "3 × max (-2 reps)", tracked: false },
+        { id: "planche_l", name: "Gainage planche lestée", scheme: "3 × 45 s", tracked: true },
+      ]},
+      { name: "Bloc boxe", duration: "30-40 min", exercises: [
+        { id: "corde_1", name: "Corde à sauter", scheme: "3 × 3 min", tracked: false },
+        { id: "shadow_1", name: "Shadow boxing — direct / crochet", scheme: "4 × 2 min", tracked: false },
+        { id: "sac_mod", name: "Sac pied-poing, intensité modérée", scheme: "5 × 2 min", tracked: false },
+        { id: "etir_1", name: "Étirements", scheme: "5-10 min", tracked: false },
+      ]},
+    ],
+  },
+  {
+    id: "tue", day: "MAR", dayFull: "Mardi",
+    title: "Jambes — salle", duration: "60-75 min",
+    icon: "legs", accent: "#D4574A",
+    blocks: [
+      { name: "Force jambes", duration: "60 min", exercises: [
+        { id: "squat", name: "Squat barre", scheme: "4 × 6-8", note: "Progression lourde", tracked: true },
+        { id: "sdt_r", name: "Soulevé de terre roumain", scheme: "3 × 8", tracked: true },
+        { id: "bulg", name: "Fentes bulgares", scheme: "3 × 8 / jambe", tracked: true },
+        { id: "lc", name: "Leg curl ou good morning", scheme: "3 × 10", tracked: true },
+        { id: "moll", name: "Mollets debout", scheme: "4 × 12", tracked: true },
+        { id: "obl", name: "Russian twists lestés", scheme: "3 × 15 / côté", tracked: true },
+      ]},
+    ],
+  },
+  {
+    id: "wed", day: "MER", dayFull: "Mercredi",
+    title: "OFF — Récup active", duration: "20-40 min",
+    icon: "rest", accent: "#8B8680", rest: true,
+    blocks: [
+      { name: "Récupération", duration: "libre", exercises: [
+        { id: "mob", name: "Mobilité hanches / épaules", scheme: "15-20 min", tracked: false },
+        { id: "walk", name: "Marche extérieure", scheme: "30-45 min", tracked: false },
+        { id: "sleep", name: "Sommeil prioritaire", scheme: "8 h visées", tracked: false },
+      ]},
+    ],
+  },
+  {
+    id: "thu", day: "JEU", dayFull: "Jeudi",
+    title: "Pull + Boxe sac", duration: "75-90 min",
+    icon: "pull", accent: "#F47C4A",
+    blocks: [
+      { name: "Bloc force", duration: "45 min", exercises: [
+        { id: "tract_l", name: "Tractions lestées", scheme: "5 × 3-5", note: "Le mouvement roi — prioriser", tracked: true },
+        { id: "tract_sup", name: "Tractions supination", scheme: "3 × 6-8", tracked: true },
+        { id: "row", name: "Rowing haltère lourd", scheme: "4 × 8 / bras", tracked: true },
+        { id: "curl", name: "Curl barre", scheme: "3 × 8", tracked: true },
+        { id: "lsit", name: "Face pull ou L-sit hold", scheme: "3 × 30 s", tracked: false },
+      ]},
+      { name: "Bloc boxe", duration: "30 min", exercises: [
+        { id: "corde_2", name: "Échauffement corde", scheme: "2 × 3 min", tracked: false },
+        { id: "sac_puis", name: "Sac — travail puissance", scheme: "6 × 2 min", note: "Rounds vrai combat", tracked: false },
+        { id: "burp_sac", name: "Burpees + sac (finisher)", scheme: "3 × 1 min", tracked: false },
+      ]},
+    ],
+  },
+  {
+    id: "fri", day: "VEN", dayFull: "Vendredi",
+    title: "Full body street + conditioning", duration: "60 min",
+    icon: "street", accent: "#E89B5C",
+    blocks: [
+      { name: "Skills calisthenics", duration: "35 min", exercises: [
+        { id: "mu", name: "Muscle-up (ou tractions explosives)", scheme: "5 × 2-3", tracked: true },
+        { id: "pseudo", name: "Pompes pseudo-planche", scheme: "4 × 5-8", tracked: false },
+        { id: "dips_s", name: "Dips stricts bodyweight", scheme: "3 × 10-12", tracked: false },
+        { id: "lsit_p", name: "L-sit progression", scheme: "4 × 20-30 s", tracked: true },
+        { id: "pistol", name: "Pistol squats assistés", scheme: "3 × 5 / jambe", tracked: false },
+      ]},
+      { name: "Conditioning boxe", duration: "20 min", exercises: [
+        { id: "condi", name: "4 rounds 3 min — burpees / corde / shadow / gainage", scheme: "30 s repos", tracked: false },
+      ]},
+    ],
+  },
+  {
+    id: "sat", day: "SAM", dayFull: "Samedi",
+    title: "Boxe longue", duration: "90 min",
+    icon: "fight", accent: "#D4574A",
+    blocks: [
+      { name: "Séance boxe complète", duration: "90 min", exercises: [
+        { id: "ech", name: "Échauffement complet", scheme: "15 min", tracked: false },
+        { id: "shadow_2", name: "Shadow boxing", scheme: "3 × 3 min", tracked: false },
+        { id: "tech", name: "Technique (combos thaï + anglais)", scheme: "20 min", tracked: false },
+        { id: "sac_spar", name: "Sac / sparring partenaire", scheme: "6-8 × 3 min", tracked: false },
+        { id: "clinch", name: "Clinch / genoux (thaï)", scheme: "15 min", tracked: false },
+        { id: "cool", name: "Retour au calme, étirements longs", scheme: "10 min", tracked: false },
+      ]},
+    ],
+  },
+  {
+    id: "sun", day: "DIM", dayFull: "Dimanche",
+    title: "OFF complet", duration: "—",
+    icon: "rest", accent: "#8B8680", rest: true,
+    blocks: [
+      { name: "Repos", duration: "journée", exercises: [
+        { id: "sleep_2", name: "Sommeil, récupération totale", scheme: "journée libre", tracked: false },
+      ]},
+    ],
+  },
+];
+
+const ICONS = {
+  push: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>',
+  pull: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
+  legs: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  street: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+  fight: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/></svg>',
+  rest: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>',
+};
+const CHECK_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F0D0B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+const CHEVRON_L = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
+const CHEVRON_R = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+
+const todayIndex = () => {
+  const d = new Date().getDay();
+  return d === 0 ? 6 : d - 1;
+};
+
+const weekKey = () => {
+  const d = new Date();
+  const onejan = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil(((d - onejan) / 86400000 + onejan.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${week}`;
+};
+
+const state = {
+  active: todayIndex(),
+  checked: JSON.parse(localStorage.getItem(`checked:${weekKey()}`) || "{}"),
+  loads: JSON.parse(localStorage.getItem("loads") || "{}"),
+};
+
+function saveChecked() {
+  localStorage.setItem(`checked:${weekKey()}`, JSON.stringify(state.checked));
+}
+function saveLoads() {
+  localStorage.setItem("loads", JSON.stringify(state.loads));
+}
+
+function renderDaySelector() {
+  const ds = document.getElementById("daySelector");
+  ds.innerHTML = "";
+  SESSIONS.forEach((s, i) => {
+    const btn = document.createElement("button");
+    btn.className = "day-pill";
+    if (i === state.active) { btn.classList.add("active"); btn.style.background = s.accent; btn.style.borderColor = s.accent; }
+    else if (i === todayIndex()) { btn.classList.add("today"); }
+    if (s.rest) btn.classList.add("rest");
+    btn.innerHTML = `
+      <div class="j-label">J${i+1}</div>
+      <div class="day-short">${s.day}</div>
+      ${(i === todayIndex() && i !== state.active) ? '<div class="today-dot"></div>' : ''}
+    `;
+    btn.onclick = () => { state.active = i; render(); window.scrollTo({top: 0, behavior: "smooth"}); };
+    ds.appendChild(btn);
+  });
+}
+
+function render() {
+  renderDaySelector();
+  const session = SESSIONS[state.active];
+  const content = document.getElementById("content");
+  const allExos = session.blocks.flatMap(b => b.exercises);
+  const doneCount = allExos.filter(e => state.checked[`${session.id}:${e.id}`]).length;
+  const progress = allExos.length ? (doneCount / allExos.length) * 100 : 0;
+
+  let html = `
+    <div class="fade-in" style="animation: slideUp 0.3s ease">
+      <div class="session-header">
+        <div class="session-top">
+          <div class="session-icon" style="background:${session.accent}">${ICONS[session.icon]}</div>
+          <div style="flex:1; min-width:0">
+            <div class="session-meta mono-font" style="color:${session.accent}">${session.dayFull.toUpperCase()} · ${session.duration}</div>
+            <h2 class="session-title display-font">${session.title}</h2>
+          </div>
+        </div>
+        ${!session.rest ? `
+          <div class="progress-wrap">
+            <div class="progress-labels">
+              <span class="progress-label mono-font">PROGRESSION</span>
+              <span class="progress-count mono-font" style="color:${session.accent}">${doneCount}/${allExos.length}</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${progress}%; background:${session.accent}"></div>
+            </div>
+          </div>
+        ` : ''}
+      </div>
+  `;
+
+  session.blocks.forEach((block, bi) => {
+    html += `
+      <div class="block">
+        <div class="block-header">
+          <div class="block-num display-font">${String(bi+1).padStart(2,'0')}</div>
+          <div class="block-line"></div>
+          <div class="block-duration mono-font">${block.duration.toUpperCase()}</div>
+        </div>
+        <h3 class="block-name display-font">${block.name}</h3>
+    `;
+    block.exercises.forEach(exo => {
+      const k = `${session.id}:${exo.id}`;
+      const isDone = !!state.checked[k];
+      html += `
+        <div class="exo-row">
+          <button class="checkbox ${isDone ? 'done' : ''}" data-exo="${exo.id}" style="border-color:${isDone ? session.accent : '#3A332D'}; background:${isDone ? session.accent : 'transparent'}">
+            ${CHECK_ICON}
+          </button>
+          <div class="exo-body">
+            <div class="exo-name ${isDone ? 'done' : ''}">${exo.name}</div>
+            <div class="exo-scheme ${isDone ? 'done' : ''}" style="color:${session.accent}">${exo.scheme}</div>
+            ${exo.note ? `<div class="exo-note">${exo.note}</div>` : ''}
+            ${exo.tracked && !session.rest ? `
+              <div class="load-wrap">
+                <span class="load-label">CHARGE</span>
+                <input type="text" class="load-input" data-load="${exo.id}" placeholder="—" value="${state.loads[k] || ''}">
+                <span class="load-unit">kg</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    });
+    html += `</div>`;
+  });
+
+  html += `
+      <div class="nav-row">
+        <button class="nav-btn" id="prevBtn">${CHEVRON_L} PRÉC</button>
+        <button class="nav-btn primary" id="nextBtn" style="background:${session.accent}; border-color:${session.accent}">SUIV ${CHEVRON_R}</button>
+      </div>
+      <div class="footer-note">
+        <div class="footer-title">RAPPEL</div>
+        <div class="footer-text">Les charges sont sauvegardées sur ton téléphone. Les cases se réinitialisent chaque semaine — la progression réelle, elle, se lit sur les charges notées.</div>
+      </div>
+    </div>
+  `;
+
+  content.innerHTML = html;
+
+  // Wire up checkboxes
+  content.querySelectorAll('.checkbox').forEach(cb => {
+    cb.onclick = () => {
+      const id = cb.dataset.exo;
+      const k = `${session.id}:${id}`;
+      state.checked[k] = !state.checked[k];
+      saveChecked();
+      render();
+    };
+  });
+
+  // Wire up load inputs
+  content.querySelectorAll('.load-input').forEach(inp => {
+    inp.oninput = () => {
+      const id = inp.dataset.load;
+      const k = `${session.id}:${id}`;
+      state.loads[k] = inp.value;
+      saveLoads();
+    };
+  });
+
+  document.getElementById('prevBtn').onclick = () => { state.active = (state.active - 1 + 7) % 7; render(); window.scrollTo({top:0, behavior:"smooth"}); };
+  document.getElementById('nextBtn').onclick = () => { state.active = (state.active + 1) % 7; render(); window.scrollTo({top:0, behavior:"smooth"}); };
+}
+
+render();
+</script>
+</body>
+</html>
