@@ -54,7 +54,7 @@
   .day-selector::-webkit-scrollbar { display: none; }
   .day-pill {
     flex-shrink: 0;
-    min-width: 56px;
+    min-width: 64px;
     padding: 10px 8px;
     background: transparent;
     border: 1px solid #2A2520;
@@ -71,7 +71,7 @@
   .day-pill.rest { color: #6B6258; }
   .day-pill.today { border-color: #F47C4A; }
   .day-pill .j-label { font-size: 10px; opacity: 0.7; }
-  .day-pill .day-short { font-size: 18px; margin-top: 2px; }
+  .day-pill .day-short { font-size: 15px; margin-top: 2px; }
   .today-dot {
     width: 4px; height: 4px;
     border-radius: 50%;
@@ -207,7 +207,7 @@
 
 <header>
   <div>
-    <div class="header-label mono-font">Programme · 5 séances</div>
+    <div class="header-label mono-font">Programme · 3 muscu + 2 course</div>
     <h1 class="display-font">FORGE <span style="color:#F47C4A">/</span> RING</h1>
   </div>
   <div class="header-icon">
@@ -222,110 +222,88 @@
 <script>
 const SESSIONS = [
   {
-    id: "mon", day: "LUN", dayFull: "Lundi",
-    title: "Push + Boxe technique", duration: "75-90 min",
-    icon: "push", accent: "#F47C4A",
-    blocks: [
-      { name: "Bloc force", duration: "45 min", exercises: [
-        { id: "dips_l", name: "Dips lestés", scheme: "4 × 5-6", note: "RPE 8, progression +1-2 kg/sem", tracked: true },
-        { id: "archer", name: "Pompes archer ou déclinées", scheme: "3 × 6-8 / côté", tracked: false },
-        { id: "dev_mil", name: "Développé militaire haltères", scheme: "4 × 6-8", tracked: true },
-        { id: "diamant", name: "Pompes diamant", scheme: "3 × max (-2 reps)", tracked: false },
-        { id: "planche_l", name: "Gainage planche lestée", scheme: "3 × 45 s", tracked: true },
-      ]},
-      { name: "Bloc boxe", duration: "30-40 min", exercises: [
-        { id: "corde_1", name: "Corde à sauter", scheme: "3 × 3 min", tracked: false },
-        { id: "shadow_1", name: "Shadow boxing — direct / crochet", scheme: "4 × 2 min", tracked: false },
-        { id: "sac_mod", name: "Sac pied-poing, intensité modérée", scheme: "5 × 2 min", tracked: false },
-        { id: "etir_1", name: "Étirements", scheme: "5-10 min", tracked: false },
-      ]},
-    ],
-  },
-  {
-    id: "tue", day: "MAR", dayFull: "Mardi",
-    title: "Jambes — salle", duration: "60-75 min",
+    id: "legs", day: "JAMBES", short: "JAMBES", dayFull: "Jambes — salle",
+    title: "Jambes — Force", duration: "60-70 min",
     icon: "legs", accent: "#D4574A",
     blocks: [
-      { name: "Force jambes", duration: "60 min", exercises: [
-        { id: "squat", name: "Squat barre", scheme: "4 × 6-8", note: "Progression lourde", tracked: true },
-        { id: "sdt_r", name: "Soulevé de terre roumain", scheme: "3 × 8", tracked: true },
+      { name: "Force bas du corps", duration: "60 min", exercises: [
+        { id: "squat", name: "Squat barre", scheme: "4 × 6-8", note: "Le gros lift — progression lourde", tracked: true },
+        { id: "sdt", name: "Soulevé de terre", scheme: "3 × 6", note: "Dos gainé, montée explosive — remplace le SDT roumain", tracked: true },
+        { id: "hip", name: "Hip thrust barre", scheme: "3 × 8-10", note: "Pause 1 s en haut, fessiers contractés", tracked: true },
         { id: "bulg", name: "Fentes bulgares", scheme: "3 × 8 / jambe", tracked: true },
-        { id: "lc", name: "Leg curl ou good morning", scheme: "3 × 10", tracked: true },
         { id: "moll", name: "Mollets debout", scheme: "4 × 12", tracked: true },
-        { id: "obl", name: "Russian twists lestés", scheme: "3 × 15 / côté", tracked: true },
       ]},
     ],
   },
   {
-    id: "wed", day: "MER", dayFull: "Mercredi",
-    title: "OFF — Récup active", duration: "20-40 min",
+    id: "push", day: "PUSH", short: "PUSH", dayFull: "Push — salle",
+    title: "Push — Pecs / Épaules", duration: "60-75 min",
+    icon: "push", accent: "#F47C4A",
+    blocks: [
+      { name: "Bloc force", duration: "50 min", exercises: [
+        { id: "dc", name: "Développé couché barre", scheme: "4 × 6-8", note: "Nouveau — omoplates serrées, descente contrôlée", tracked: true },
+        { id: "dips_l", name: "Dips lestés", scheme: "4 × 5-6", note: "RPE 8, progression +1-2 kg/sem", tracked: true },
+        { id: "dev_mil", name: "Développé militaire haltères", scheme: "4 × 6-8", tracked: true },
+        { id: "diamant", name: "Pompes diamant ou déclinées", scheme: "3 × max (-2 reps)", tracked: false },
+        { id: "planche_l", name: "Gainage planche lestée", scheme: "3 × 45 s", tracked: true },
+      ]},
+      { name: "Finisher boxe — sac (optionnel)", duration: "10-15 min", exercises: [
+        { id: "sac_push", name: "Sac de frappe — pied-poing", scheme: "4 × 2 min", note: "Optionnel, si énergie restante", tracked: false },
+        { id: "corde_push", name: "Corde à sauter", scheme: "3 × 2 min", tracked: false },
+      ]},
+    ],
+  },
+  {
+    id: "run_endu", day: "ENDURANCE", short: "ENDUR", dayFull: "Course — endurance",
+    title: "Footing — Endurance", duration: "45-60 min",
+    icon: "run", accent: "#C9A24B",
+    blocks: [
+      { name: "Sortie facile", duration: "45-60 min", exercises: [
+        { id: "echauf_e", name: "Échauffement + mobilité", scheme: "10 min", tracked: false },
+        { id: "footing", name: "Footing allure facile", scheme: "30-45 min", note: "Allure conversationnelle (zone 2), foncier", tracked: false },
+        { id: "retour_e", name: "Retour au calme + étirements", scheme: "10 min", tracked: false },
+      ]},
+    ],
+  },
+  {
+    id: "pull", day: "PULL", short: "PULL", dayFull: "Pull — salle",
+    title: "Pull — Dos / Biceps", duration: "60-75 min",
+    icon: "pull", accent: "#E89B5C",
+    blocks: [
+      { name: "Bloc force", duration: "50 min", exercises: [
+        { id: "tract_l", name: "Tractions lestées", scheme: "5 × 3-5", note: "Le mouvement roi — prioriser", tracked: true },
+        { id: "tract_sup", name: "Tractions supination", scheme: "3 × 6-8", tracked: true },
+        { id: "row", name: "Rowing haltère lourd", scheme: "4 × 8 / bras", tracked: true },
+        { id: "curl", name: "Curl barre", scheme: "3 × 8", note: "Biceps", tracked: true },
+        { id: "curl_m", name: "Curl marteau", scheme: "3 × 10", note: "Biceps — remplace le face pull / L-sit", tracked: true },
+      ]},
+      { name: "Finisher boxe — sac (optionnel)", duration: "10-15 min", exercises: [
+        { id: "sac_pull", name: "Sac de frappe — travail puissance", scheme: "5 × 2 min", note: "Optionnel, rounds vrai combat", tracked: false },
+        { id: "burp_pull", name: "Burpees (finisher)", scheme: "3 × 1 min", tracked: false },
+      ]},
+    ],
+  },
+  {
+    id: "run_frac", day: "FRACTIONNÉ", short: "FRACT", dayFull: "Course — fractionné",
+    title: "Fractionné / Intervalles", duration: "40-50 min",
+    icon: "interval", accent: "#D4574A",
+    blocks: [
+      { name: "Séance vitesse", duration: "40-50 min", exercises: [
+        { id: "echauf_f", name: "Échauffement progressif", scheme: "15 min", note: "Montée en allure + gammes", tracked: false },
+        { id: "frac", name: "Fractionné", scheme: "8 × (30 s vite / 30 s lent)", note: "Ou 6 × 400 m — progresser semaine après semaine", tracked: false },
+        { id: "retour_f", name: "Retour au calme footing lent", scheme: "10 min", tracked: false },
+      ]},
+    ],
+  },
+  {
+    id: "rest", day: "REPOS", short: "REPOS", dayFull: "Repos / récup",
+    title: "Repos & récupération", duration: "20-30 min",
     icon: "rest", accent: "#8B8680", rest: true,
     blocks: [
       { name: "Récupération", duration: "libre", exercises: [
         { id: "mob", name: "Mobilité hanches / épaules", scheme: "15-20 min", tracked: false },
-        { id: "walk", name: "Marche extérieure", scheme: "30-45 min", tracked: false },
         { id: "sleep", name: "Sommeil prioritaire", scheme: "8 h visées", tracked: false },
-      ]},
-    ],
-  },
-  {
-    id: "thu", day: "JEU", dayFull: "Jeudi",
-    title: "Pull + Boxe sac", duration: "75-90 min",
-    icon: "pull", accent: "#F47C4A",
-    blocks: [
-      { name: "Bloc force", duration: "45 min", exercises: [
-        { id: "tract_l", name: "Tractions lestées", scheme: "5 × 3-5", note: "Le mouvement roi — prioriser", tracked: true },
-        { id: "tract_sup", name: "Tractions supination", scheme: "3 × 6-8", tracked: true },
-        { id: "row", name: "Rowing haltère lourd", scheme: "4 × 8 / bras", tracked: true },
-        { id: "curl", name: "Curl barre", scheme: "3 × 8", tracked: true },
-        { id: "lsit", name: "Face pull ou L-sit hold", scheme: "3 × 30 s", tracked: false },
-      ]},
-      { name: "Bloc boxe", duration: "30 min", exercises: [
-        { id: "corde_2", name: "Échauffement corde", scheme: "2 × 3 min", tracked: false },
-        { id: "sac_puis", name: "Sac — travail puissance", scheme: "6 × 2 min", note: "Rounds vrai combat", tracked: false },
-        { id: "burp_sac", name: "Burpees + sac (finisher)", scheme: "3 × 1 min", tracked: false },
-      ]},
-    ],
-  },
-  {
-    id: "fri", day: "VEN", dayFull: "Vendredi",
-    title: "Full body street + conditioning", duration: "60 min",
-    icon: "street", accent: "#E89B5C",
-    blocks: [
-      { name: "Skills calisthenics", duration: "35 min", exercises: [
-        { id: "mu", name: "Muscle-up (ou tractions explosives)", scheme: "5 × 2-3", tracked: true },
-        { id: "pseudo", name: "Pompes pseudo-planche", scheme: "4 × 5-8", tracked: false },
-        { id: "dips_s", name: "Dips stricts bodyweight", scheme: "3 × 10-12", tracked: false },
-        { id: "lsit_p", name: "L-sit progression", scheme: "4 × 20-30 s", tracked: true },
-        { id: "pistol", name: "Pistol squats assistés", scheme: "3 × 5 / jambe", tracked: false },
-      ]},
-      { name: "Conditioning boxe", duration: "20 min", exercises: [
-        { id: "condi", name: "4 rounds 3 min — burpees / corde / shadow / gainage", scheme: "30 s repos", tracked: false },
-      ]},
-    ],
-  },
-  {
-    id: "sat", day: "SAM", dayFull: "Samedi",
-    title: "Boxe longue", duration: "90 min",
-    icon: "fight", accent: "#D4574A",
-    blocks: [
-      { name: "Séance boxe complète", duration: "90 min", exercises: [
-        { id: "ech", name: "Échauffement complet", scheme: "15 min", tracked: false },
-        { id: "shadow_2", name: "Shadow boxing", scheme: "3 × 3 min", tracked: false },
-        { id: "tech", name: "Technique (combos thaï + anglais)", scheme: "20 min", tracked: false },
-        { id: "sac_spar", name: "Sac / sparring partenaire", scheme: "6-8 × 3 min", tracked: false },
-        { id: "clinch", name: "Clinch / genoux (thaï)", scheme: "15 min", tracked: false },
-        { id: "cool", name: "Retour au calme, étirements longs", scheme: "10 min", tracked: false },
-      ]},
-    ],
-  },
-  {
-    id: "sun", day: "DIM", dayFull: "Dimanche",
-    title: "OFF complet", duration: "—",
-    icon: "rest", accent: "#8B8680", rest: true,
-    blocks: [
-      { name: "Repos", duration: "journée", exercises: [
-        { id: "sleep_2", name: "Sommeil, récupération totale", scheme: "journée libre", tracked: false },
+        { id: "rest_note", name: "2 jours de repos / semaine", scheme: "à placer selon ta fatigue", tracked: false },
       ]},
     ],
   },
@@ -335,18 +313,13 @@ const ICONS = {
   push: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>',
   pull: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
   legs: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-  street: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
-  fight: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/></svg>',
+  run: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+  interval: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
   rest: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>',
 };
 const CHECK_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F0D0B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 const CHEVRON_L = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
 const CHEVRON_R = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
-
-const todayIndex = () => {
-  const d = new Date().getDay();
-  return d === 0 ? 6 : d - 1;
-};
 
 const weekKey = () => {
   const d = new Date();
@@ -356,7 +329,7 @@ const weekKey = () => {
 };
 
 const state = {
-  active: todayIndex(),
+  active: 0,
   checked: JSON.parse(localStorage.getItem(`checked:${weekKey()}`) || "{}"),
   loads: JSON.parse(localStorage.getItem("loads") || "{}"),
 };
@@ -375,12 +348,10 @@ function renderDaySelector() {
     const btn = document.createElement("button");
     btn.className = "day-pill";
     if (i === state.active) { btn.classList.add("active"); btn.style.background = s.accent; btn.style.borderColor = s.accent; }
-    else if (i === todayIndex()) { btn.classList.add("today"); }
     if (s.rest) btn.classList.add("rest");
     btn.innerHTML = `
-      <div class="j-label">J${i+1}</div>
-      <div class="day-short">${s.day}</div>
-      ${(i === todayIndex() && i !== state.active) ? '<div class="today-dot"></div>' : ''}
+      <div class="j-label">${String(i+1).padStart(2,'0')}</div>
+      <div class="day-short">${s.short || s.day}</div>
     `;
     btn.onclick = () => { state.active = i; render(); window.scrollTo({top: 0, behavior: "smooth"}); };
     ds.appendChild(btn);
@@ -462,7 +433,7 @@ function render() {
       </div>
       <div class="footer-note">
         <div class="footer-title">RAPPEL</div>
-        <div class="footer-text">Les charges sont sauvegardées sur ton téléphone. Les cases se réinitialisent chaque semaine — la progression réelle, elle, se lit sur les charges notées.</div>
+        <div class="footer-text">L'ordre des séances est une suggestion pour bien répartir muscu et course (jamais 2 footings à la suite). Choisis la tuile que tu fais aujourd'hui, peu importe le jour. Les charges sont sauvegardées sur ton téléphone ; les cases se réinitialisent chaque semaine.</div>
       </div>
     </div>
   `;
@@ -490,8 +461,9 @@ function render() {
     };
   });
 
-  document.getElementById('prevBtn').onclick = () => { state.active = (state.active - 1 + 7) % 7; render(); window.scrollTo({top:0, behavior:"smooth"}); };
-  document.getElementById('nextBtn').onclick = () => { state.active = (state.active + 1) % 7; render(); window.scrollTo({top:0, behavior:"smooth"}); };
+  const n = SESSIONS.length;
+  document.getElementById('prevBtn').onclick = () => { state.active = (state.active - 1 + n) % n; render(); window.scrollTo({top:0, behavior:"smooth"}); };
+  document.getElementById('nextBtn').onclick = () => { state.active = (state.active + 1) % n; render(); window.scrollTo({top:0, behavior:"smooth"}); };
 }
 
 render();
