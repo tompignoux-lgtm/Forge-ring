@@ -84,6 +84,25 @@
 
   .content { padding: 0 20px; }
 
+  .variant-wrap { padding: 18px 0 4px; border-bottom: 1px solid #1E1A16; }
+  .variant-title { font-size: 10px; color: #6B6258; letter-spacing: 0.15em; margin-bottom: 10px; }
+  .variant-group { font-size: 10px; color: #8B8680; letter-spacing: 0.12em; margin: 10px 0 6px; }
+  .variant-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .variant-chip {
+    padding: 8px 12px;
+    background: transparent;
+    border: 1px solid #2A2520;
+    color: #EDE6DC;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .variant-chip:active { transform: scale(0.95); }
+  .variant-chip.active { color: #0F0D0B; }
+  .session-desc { font-size: 12px; color: #A39989; line-height: 1.5; margin-top: 12px; }
+
   .session-header {
     padding: 20px 0 16px;
     border-bottom: 1px solid #1E1A16;
@@ -210,7 +229,7 @@
 
 <header>
   <div>
-    <div class="header-label mono-font">Programme · 3 muscu + 2 course</div>
+    <div class="header-label mono-font">Programme · 3 muscu · course · cartouche</div>
     <h1 class="display-font">FORGE <span style="color:#F47C4A">/</span> RING</h1>
   </div>
   <div class="header-icon">
@@ -223,90 +242,257 @@
 <div class="content" id="content"></div>
 
 <script>
+// Semaine fixe : index 0 = lundi … 6 = dimanche.
+// Les id "legs", "pull", "push" et les id d'exos sont conservés pour garder les charges déjà enregistrées.
 const SESSIONS = [
   {
-    id: "legs", day: "JAMBES", short: "JAMBES", dayFull: "Jambes — salle",
-    title: "Jambes — Force", duration: "60-70 min",
+    id: "legs", day: "LUN", short: "JAMBES", dayFull: "Lundi — Jambes",
+    title: "Jambes — Volume 15+", duration: "70-80 min",
     icon: "legs", accent: "#D4574A",
+    desc: "Méthode haut volume : 15 répétitions minimum sur chaque série. Choisis une charge qui te laisse 1-2 reps en réserve à la fin.",
     blocks: [
-      { name: "Force bas du corps", duration: "60 min", exercises: [
-        { id: "squat", name: "Squat barre", scheme: "4 × 6-8", note: "Le gros lift — progression lourde", tracked: true },
-        { id: "sdt", name: "Soulevé de terre", scheme: "3 × 6", note: "Dos gainé, montée explosive — remplace le SDT roumain", tracked: true },
-        { id: "hip", name: "Hip thrust barre", scheme: "3 × 8-10", note: "Pause 1 s en haut, fessiers contractés", tracked: true },
-        { id: "bulg", name: "Fentes bulgares", scheme: "3 × 8 / jambe", tracked: true },
-        { id: "moll", name: "Mollets debout", scheme: "4 × 12", tracked: true },
+      { name: "Bas du corps — haut volume", duration: "70 min", exercises: [
+        { id: "squat", name: "Squat barre", scheme: "4 × 15-20", note: "Quand tu passes 20 reps sur toutes les séries → +2,5 kg", tracked: true },
+        { id: "sdt", name: "Soulevé de terre", scheme: "3 × 15", note: "Reps contrôlées, dos neutre — coupe la série dès que le dos s'arrondit", tracked: true },
+        { id: "bulg", name: "Fentes bulgares", scheme: "3 × 15 / jambe", note: "Haltères, descente lente", tracked: true },
+        { id: "hip", name: "Hip thrust barre", scheme: "3 × 15-20", note: "Pause 1 s en haut, fessiers contractés", tracked: true },
+        { id: "moll", name: "Mollets debout", scheme: "4 × 15-20", note: "Amplitude complète, 1 s étiré en bas", tracked: true },
       ]},
     ],
   },
   {
-    id: "push", day: "PUSH", short: "PUSH", dayFull: "Push — salle",
-    title: "Push — Pecs / Épaules", duration: "60-75 min",
+    id: "pull", day: "MAR", short: "PULL", dayFull: "Mardi — Pull",
+    title: "Pull — Dos / Biceps", duration: "60-70 min",
+    icon: "pull", accent: "#E89B5C",
+    blocks: [
+      { name: "Bloc force", duration: "60 min", exercises: [
+        { id: "tract_l", name: "Tractions lestées", scheme: "5 × 3-5", note: "Le mouvement roi — en premier, +1-2 kg dès que 5 × 5 passe", tracked: true },
+        { id: "row", name: "Rowing haltère lourd", scheme: "4 × 8 / bras", note: "Appui sur banc pour épargner le dos après les jambes", tracked: true },
+        { id: "tract_sup", name: "Tractions supination", scheme: "3 × 6-8", tracked: true },
+        { id: "curl", name: "Curl barre", scheme: "3 × 8", tracked: true },
+        { id: "curl_m", name: "Curl marteau", scheme: "3 × 10", tracked: true },
+      ]},
+    ],
+  },
+  {
+    id: "push", day: "MER", short: "PUSH", dayFull: "Mercredi — Push",
+    title: "Push — Pecs / Épaules", duration: "60-70 min",
     icon: "push", accent: "#F47C4A",
     blocks: [
-      { name: "Bloc force", duration: "50 min", exercises: [
-        { id: "dc", name: "Développé couché barre", scheme: "4 × 6-8", note: "Nouveau — omoplates serrées, descente contrôlée", tracked: true },
+      { name: "Bloc force", duration: "60 min", exercises: [
+        { id: "dc", name: "Développé couché barre", scheme: "4 × 5-6", note: "Priorité de la séance — omoplates serrées, +2,5 kg dès que 4 × 6 passe", tracked: true },
         { id: "dips_l", name: "Dips lestés", scheme: "4 × 5-6", note: "RPE 8, progression +1-2 kg/sem", tracked: true },
-        { id: "dev_mil", name: "Développé militaire haltères", scheme: "4 × 6-8", tracked: true },
+        { id: "dev_mil", name: "Développé militaire haltères", scheme: "3 × 8", tracked: true },
         { id: "diamant", name: "Pompes diamant ou déclinées", scheme: "3 × max (-2 reps)", tracked: false },
         { id: "planche_l", name: "Gainage planche lestée", scheme: "3 × 45 s", tracked: true },
       ]},
-      { name: "Finisher boxe — sac (optionnel)", duration: "10-15 min", exercises: [
-        { id: "sac_push", name: "Sac de frappe — pied-poing", scheme: "4 × 2 min", note: "Optionnel, si énergie restante", tracked: false },
-        { id: "corde_push", name: "Corde à sauter", scheme: "3 × 2 min", tracked: false },
-      ]},
     ],
   },
   {
-    id: "run_endu", day: "ENDURANCE", short: "ENDUR", dayFull: "Course — endurance",
-    title: "Footing — Endurance", duration: "45-60 min",
-    icon: "run", accent: "#C9A24B",
-    blocks: [
-      { name: "Sortie facile", duration: "45-60 min", exercises: [
-        { id: "echauf_e", name: "Échauffement + mobilité", scheme: "10 min", tracked: false },
-        { id: "footing", name: "Footing allure facile", scheme: "30-45 min", note: "Allure conversationnelle (zone 2), foncier", tracked: false },
-        { id: "retour_e", name: "Retour au calme + étirements", scheme: "10 min", tracked: false },
-      ]},
-    ],
-  },
-  {
-    id: "pull", day: "PULL", short: "PULL", dayFull: "Pull — salle",
-    title: "Pull — Dos / Biceps", duration: "60-75 min",
-    icon: "pull", accent: "#E89B5C",
-    blocks: [
-      { name: "Bloc force", duration: "50 min", exercises: [
-        { id: "tract_l", name: "Tractions lestées", scheme: "5 × 3-5", note: "Le mouvement roi — prioriser", tracked: true },
-        { id: "tract_sup", name: "Tractions supination", scheme: "3 × 6-8", tracked: true },
-        { id: "row", name: "Rowing haltère lourd", scheme: "4 × 8 / bras", tracked: true },
-        { id: "curl", name: "Curl barre", scheme: "3 × 8", note: "Biceps", tracked: true },
-        { id: "curl_m", name: "Curl marteau", scheme: "3 × 10", note: "Biceps — remplace le face pull / L-sit", tracked: true },
-      ]},
-      { name: "Finisher boxe — sac (optionnel)", duration: "10-15 min", exercises: [
-        { id: "sac_pull", name: "Sac de frappe — travail puissance", scheme: "5 × 2 min", note: "Optionnel, rounds vrai combat", tracked: false },
-        { id: "burp_pull", name: "Burpees (finisher)", scheme: "3 × 1 min", tracked: false },
-      ]},
-    ],
-  },
-  {
-    id: "run_frac", day: "FRACTIONNÉ", short: "FRACT", dayFull: "Course — fractionné",
-    title: "Fractionné / Intervalles", duration: "40-50 min",
-    icon: "interval", accent: "#D4574A",
-    blocks: [
-      { name: "Séance vitesse", duration: "40-50 min", exercises: [
-        { id: "echauf_f", name: "Échauffement progressif", scheme: "15 min", note: "Montée en allure + gammes", tracked: false },
-        { id: "frac", name: "Fractionné", scheme: "8 × (30 s vite / 30 s lent)", note: "Ou 6 × 400 m — progresser semaine après semaine", tracked: false },
-        { id: "retour_f", name: "Retour au calme footing lent", scheme: "10 min", tracked: false },
-      ]},
-    ],
-  },
-  {
-    id: "rest", day: "REPOS", short: "REPOS", dayFull: "Repos / récup",
+    id: "rest_jeu", day: "JEU", short: "REPOS", dayFull: "Jeudi — Repos",
     title: "Repos & récupération", duration: "20-30 min",
     icon: "rest", accent: "#8B8680", rest: true,
     blocks: [
       { name: "Récupération", duration: "libre", exercises: [
         { id: "mob", name: "Mobilité hanches / épaules", scheme: "15-20 min", tracked: false },
+        { id: "walk", name: "Marche tranquille (optionnel)", scheme: "30 min", tracked: false },
         { id: "sleep", name: "Sommeil prioritaire", scheme: "8 h visées", tracked: false },
-        { id: "rest_note", name: "2 jours de repos / semaine", scheme: "à placer selon ta fatigue", tracked: false },
+      ]},
+    ],
+  },
+  {
+    id: "run", day: "VEN", short: "COURSE", dayFull: "Vendredi — Course",
+    icon: "run", accent: "#C9A24B",
+    pickLabel: "CHOISIS TA SÉANCE DU JOUR",
+    variants: [
+      {
+        id: "ef", label: "EF", group: "Endurance",
+        title: "Endurance fondamentale", duration: "45-60 min",
+        desc: "Allure où tu peux parler en phrases complètes. C'est la base qui te fait mieux récupérer entre les sprints.",
+        blocks: [
+          { name: "Sortie facile", duration: "45-60 min", exercises: [
+            { id: "echauf", name: "Échauffement + mobilité", scheme: "10 min", tracked: false },
+            { id: "ef", name: "Footing zone 2", scheme: "35-50 min", note: "Allure conversationnelle", tracked: true, label: "DISTANCE", unit: "km" },
+            { id: "retour", name: "Retour au calme + étirements", scheme: "10 min", tracked: false },
+          ]},
+        ],
+      },
+      {
+        id: "3030", label: "30/30", group: "Fractionné",
+        title: "Fractionné 30/30", duration: "40-45 min",
+        desc: "30 s vite (≈ allure 3 000 m) / 30 s trot. Garde la même allure du premier au dernier : si tu ralentis à la fin, tu es parti trop vite.",
+        blocks: [
+          { name: "Séance", duration: "40-45 min", exercises: [
+            { id: "echauf", name: "Échauffement footing + gammes", scheme: "15 min", note: "Montées de genoux, talons-fesses, 3 accélérations", tracked: false },
+            { id: "s1", name: "Série 1", scheme: "10 × (30 s vite / 30 s trot)", tracked: false },
+            { id: "recup", name: "Récupération entre séries", scheme: "3 min footing lent", tracked: false },
+            { id: "s2", name: "Série 2", scheme: "10 × (30 s vite / 30 s trot)", note: "Progression : passe à 3 séries quand c'est facile", tracked: false },
+            { id: "retour", name: "Retour au calme", scheme: "10 min", tracked: false },
+          ]},
+        ],
+      },
+      {
+        id: "200", label: "200 M", group: "Fractionné",
+        title: "Fractionné 200 m", duration: "45 min",
+        desc: "Vitesse soutenue : tu veux le même chrono sur toutes les répétitions. Note ton temps moyen pour suivre ta progression.",
+        blocks: [
+          { name: "Séance", duration: "45 min", exercises: [
+            { id: "echauf", name: "Échauffement footing + gammes", scheme: "15 min", note: "+ 3 lignes droites progressives", tracked: false },
+            { id: "reps", name: "200 m à 90 %", scheme: "8-10 × 200 m", note: "Récup 200 m marche/trot (≈ 1 min 30)", tracked: true, label: "CHRONO MOY.", unit: "s" },
+            { id: "retour", name: "Retour au calme", scheme: "10 min", tracked: false },
+          ]},
+        ],
+      },
+      {
+        id: "sprint", label: "SPRINT", group: "Vitesse",
+        title: "Sprint — vitesse max", duration: "40 min",
+        desc: "Qualité avant quantité : 95-100 % d'effort et récup COMPLÈTE. Si tu es essoufflé au départ, attends encore.",
+        blocks: [
+          { name: "Préparation", duration: "15 min", exercises: [
+            { id: "echauf", name: "Footing léger", scheme: "8 min", tracked: false },
+            { id: "gammes", name: "Gammes : skipping A, B, talons-fesses", scheme: "2 × 20 m chacune", tracked: false },
+            { id: "accel", name: "Accélérations progressives", scheme: "3 × 60 m", note: "60 → 70 → 85 %", tracked: false },
+          ]},
+          { name: "Sprints", duration: "20 min", exercises: [
+            { id: "dep", name: "Départs debout", scheme: "6 × 30 m", note: "Récup 2 min marche — buste penché, bras puissants", tracked: true, label: "MEILLEUR", unit: "s" },
+            { id: "lance", name: "Sprints lancés", scheme: "4 × (20 m élan + 30 m à fond)", note: "Récup 3 min — vitesse max, relâché", tracked: false },
+            { id: "retour", name: "Retour au calme", scheme: "5-10 min", tracked: false },
+          ]},
+        ],
+      },
+      {
+        id: "cotes", label: "CÔTES", group: "Vitesse",
+        title: "Sprints en côte", duration: "35-40 min",
+        desc: "Le meilleur outil pour la puissance de poussée en sprint, avec moins de risque pour les ischios que le plat.",
+        blocks: [
+          { name: "Séance", duration: "35-40 min", exercises: [
+            { id: "echauf", name: "Échauffement footing + gammes", scheme: "15 min", tracked: false },
+            { id: "cote", name: "Sprints en côte (pente 6-10 %)", scheme: "8-10 × 10-15 s", note: "Récup en redescendant en marchant (≈ 1 min 30-2 min)", tracked: false },
+            { id: "retour", name: "Retour au calme", scheme: "10 min", tracked: false },
+          ]},
+        ],
+      },
+      {
+        id: "plio", label: "PLIO", group: "Vitesse",
+        title: "Pliométrie + départs", duration: "35 min",
+        desc: "Raideur du pied et réactivité au sol : ce qui manque souvent pour gagner en vitesse quand on fait déjà de la muscu.",
+        blocks: [
+          { name: "Séance", duration: "35 min", exercises: [
+            { id: "echauf", name: "Échauffement footing + mobilité chevilles", scheme: "10 min", tracked: false },
+            { id: "pogo", name: "Pogo jumps (rebonds chevilles)", scheme: "3 × 15", tracked: false },
+            { id: "bonds", name: "Bonds alternés", scheme: "4 × 20 m", tracked: false },
+            { id: "groupes", name: "Sauts groupés", scheme: "3 × 6", tracked: false },
+            { id: "dep", name: "Départs explosifs", scheme: "6 × 20 m", note: "Récup 1 min 30", tracked: false },
+            { id: "retour", name: "Retour au calme", scheme: "5 min", tracked: false },
+          ]},
+        ],
+      },
+    ],
+  },
+  {
+    id: "cartouche", day: "SAM", short: "CARTOUCHE", dayFull: "Samedi — Cartouche",
+    icon: "fire", accent: "#D4574A",
+    pickLabel: "CHOISIS TA CARTOUCHE DU JOUR",
+    variants: [
+      {
+        id: "box_tech", label: "TECHNIQUE", group: "Box",
+        title: "Box — Technique & cardio", duration: "50 min",
+        blocks: [
+          { name: "Échauffement", duration: "15 min", exercises: [
+            { id: "corde", name: "Corde à sauter", scheme: "3 × 3 min", note: "Récup 1 min", tracked: false },
+            { id: "shadow", name: "Shadow boxing", scheme: "3 × 3 min", note: "Défense + déplacements, enchaînements propres", tracked: false },
+          ]},
+          { name: "Sac", duration: "25 min", exercises: [
+            { id: "sac", name: "Sac pied-poing — 1 thème par round", scheme: "6 × 3 min", note: "Récup 1 min — jab-cross / crochets / low kicks / remises…", tracked: false },
+          ]},
+          { name: "Fin", duration: "5-10 min", exercises: [
+            { id: "abdos", name: "Gainage + abdos", scheme: "3 × 1 min", tracked: false },
+          ]},
+        ],
+      },
+      {
+        id: "box_int", label: "INTENSITÉ", group: "Box",
+        title: "Box — Intensité", duration: "40 min",
+        blocks: [
+          { name: "Échauffement", duration: "10 min", exercises: [
+            { id: "corde", name: "Corde à sauter", scheme: "2 × 3 min", tracked: false },
+            { id: "shadow", name: "Shadow boxing progressif", scheme: "2 × 2 min", tracked: false },
+          ]},
+          { name: "Circuit", duration: "25 min", exercises: [
+            { id: "sac", name: "Sac — enchaînements à fond", scheme: "10 × 1 min", note: "Récup 30 s — puissance + volume", tracked: false },
+            { id: "sprawl", name: "Burpees / sprawls", scheme: "4 × 45 s", note: "Récup 15 s", tracked: false },
+          ]},
+          { name: "Retour au calme", duration: "5 min", exercises: [
+            { id: "calme", name: "Shadow léger + étirements", scheme: "5 min", tracked: false },
+          ]},
+        ],
+      },
+      {
+        id: "sw_classique", label: "CLASSIQUE", group: "Street workout",
+        title: "Street workout — La classique", duration: "35-45 min",
+        desc: "Tractions → dips → pompes → squats, sans pause dans le tour. Note ton chrono total et bats-le.",
+        blocks: [
+          { name: "Circuit — 5 tours", duration: "30-40 min", exercises: [
+            { id: "tract", name: "Tractions", scheme: "5 reps", tracked: false },
+            { id: "dips", name: "Dips", scheme: "10 reps", tracked: false },
+            { id: "pompes", name: "Pompes", scheme: "15 reps", tracked: false },
+            { id: "squats", name: "Squats", scheme: "20 reps", note: "Récup 2 min entre les tours", tracked: false },
+            { id: "chrono", name: "Chrono total", scheme: "5 tours", tracked: true, label: "CHRONO", unit: "min" },
+          ]},
+        ],
+      },
+      {
+        id: "sw_emom", label: "EMOM 20", group: "Street workout",
+        title: "Street workout — EMOM 20", duration: "25 min",
+        desc: "Chaque minute, tu fais l'exo puis tu te reposes le temps restant. Trop facile → ajoute 1 rep partout la semaine suivante.",
+        blocks: [
+          { name: "EMOM 20 min (5 rounds)", duration: "20 min", exercises: [
+            { id: "m1", name: "Minute 1 — Tractions", scheme: "6 reps", tracked: false },
+            { id: "m2", name: "Minute 2 — Dips", scheme: "12 reps", tracked: false },
+            { id: "m3", name: "Minute 3 — Pompes", scheme: "18 reps", tracked: false },
+            { id: "m4", name: "Minute 4 — Squats sautés", scheme: "15 reps", tracked: false },
+          ]},
+        ],
+      },
+      {
+        id: "hyrox_simu", label: "SIMU", group: "Hyrox",
+        title: "Hyrox — Mini simulation", duration: "45-55 min",
+        desc: "Format course : 1 km de course puis une station, 4 fois. Pas de SkiErg ou de traîneau ? Remplace par rameur et poussée de disques au sol.",
+        blocks: [
+          { name: "4 × (1 km + station)", duration: "40-50 min", exercises: [
+            { id: "r1", name: "1 km course → SkiErg", scheme: "1 000 m", tracked: false },
+            { id: "r2", name: "1 km course → Sled push", scheme: "50 m", tracked: false },
+            { id: "r3", name: "1 km course → Rameur", scheme: "1 000 m", tracked: false },
+            { id: "r4", name: "1 km course → Wall balls", scheme: "50 reps", tracked: true, label: "BALLON", unit: "kg" },
+            { id: "chrono", name: "Chrono total", scheme: "objectif : le battre", tracked: true, label: "CHRONO", unit: "min" },
+          ]},
+        ],
+      },
+      {
+        id: "hyrox_stations", label: "STATIONS", group: "Hyrox",
+        title: "Hyrox — Stations en rounds", duration: "40-45 min",
+        desc: "Travail des stations les plus dures sur jambes fatiguées (« compromised running »).",
+        blocks: [
+          { name: "4 tours", duration: "35-40 min", exercises: [
+            { id: "run", name: "Course", scheme: "400 m", tracked: false },
+            { id: "wb", name: "Wall balls", scheme: "20 reps", tracked: true, label: "BALLON", unit: "kg" },
+            { id: "lunges", name: "Fentes marchées sandbag", scheme: "20 m", tracked: true, label: "SAC", unit: "kg" },
+            { id: "bbj", name: "Burpees sautés en longueur", scheme: "10 reps", tracked: false },
+            { id: "farmer", name: "Farmer carry", scheme: "100 m", note: "Récup 2 min entre les tours", tracked: true, label: "HALTÈRES", unit: "kg" },
+          ]},
+        ],
+      },
+    ],
+  },
+  {
+    id: "rest_dim", day: "DIM", short: "REPOS", dayFull: "Dimanche — Repos",
+    title: "Repos & récupération", duration: "libre",
+    icon: "rest", accent: "#8B8680", rest: true,
+    blocks: [
+      { name: "Récupération", duration: "libre", exercises: [
+        { id: "mob", name: "Mobilité / étirements", scheme: "15-20 min", tracked: false },
+        { id: "sleep", name: "Sommeil prioritaire", scheme: "8 h visées", tracked: false },
+        { id: "prep", name: "Préparer la semaine (repas, sac)", scheme: "—", tracked: false },
       ]},
     ],
   },
@@ -316,8 +502,8 @@ const ICONS = {
   push: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/></svg>',
   pull: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
   legs: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-  run: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
-  interval: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  run: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  fire: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
   rest: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>',
 };
 const CHECK_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F0D0B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
@@ -331,17 +517,33 @@ const weekKey = () => {
   return `${d.getFullYear()}-W${week}`;
 };
 
+function readJSON(key) {
+  try { return JSON.parse(localStorage.getItem(key) || "{}"); } catch (e) { return {}; }
+}
+function writeJSON(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+}
+
+// Lundi = 0 … Dimanche = 6
+const TODAY = (new Date().getDay() + 6) % 7;
+
 const state = {
-  active: 0,
-  checked: JSON.parse(localStorage.getItem(`checked:${weekKey()}`) || "{}"),
-  loads: JSON.parse(localStorage.getItem("loads") || "{}"),
+  active: TODAY,
+  checked: readJSON(`checked:${weekKey()}`),
+  loads: readJSON("loads"),
+  variants: readJSON(`variants:${weekKey()}`),
 };
 
-function saveChecked() {
-  localStorage.setItem(`checked:${weekKey()}`, JSON.stringify(state.checked));
-}
-function saveLoads() {
-  localStorage.setItem("loads", JSON.stringify(state.loads));
+function saveChecked() { writeJSON(`checked:${weekKey()}`, state.checked); }
+function saveLoads() { writeJSON("loads", state.loads); }
+function saveVariants() { writeJSON(`variants:${weekKey()}`, state.variants); }
+
+// Séance affichée (avec la variante choisie si la journée en propose)
+function currentView(session) {
+  if (!session.variants) return { view: session, prefix: session.id, variant: null };
+  const variant = session.variants.find(v => v.id === state.variants[session.id]) || null;
+  if (!variant) return { view: session, prefix: session.id, variant: null };
+  return { view: { ...session, ...variant, id: session.id }, prefix: `${session.id}:${variant.id}`, variant };
 }
 
 function renderDaySelector() {
@@ -352,22 +554,51 @@ function renderDaySelector() {
     btn.className = "day-pill";
     if (i === state.active) { btn.classList.add("active"); btn.style.background = s.accent; btn.style.borderColor = s.accent; }
     if (s.rest) btn.classList.add("rest");
+    if (i === TODAY && i !== state.active) btn.classList.add("today");
     btn.innerHTML = `
-      <div class="j-label">${String(i+1).padStart(2,'0')}</div>
-      <div class="day-short">${s.short || s.day}</div>
+      <div class="j-label">${s.day}</div>
+      <div class="day-short">${s.short}</div>
+      ${i === TODAY ? '<div class="today-dot"' + (i === state.active ? ' style="background:#0F0D0B"' : '') + '></div>' : ''}
     `;
     btn.onclick = () => { state.active = i; render(); window.scrollTo({top: 0, behavior: "smooth"}); };
     ds.appendChild(btn);
   });
+  const activeBtn = ds.children[state.active];
+  if (activeBtn && activeBtn.scrollIntoView) activeBtn.scrollIntoView({ inline: "center", block: "nearest" });
+}
+
+function renderVariantPicker(session, variant) {
+  const groups = [];
+  session.variants.forEach(v => {
+    let g = groups.find(x => x.name === v.group);
+    if (!g) { g = { name: v.group, items: [] }; groups.push(g); }
+    g.items.push(v);
+  });
+  let html = `<div class="variant-wrap"><div class="variant-title mono-font">${session.pickLabel}</div>`;
+  groups.forEach(g => {
+    html += `<div class="variant-group mono-font">${g.name.toUpperCase()}</div><div class="variant-row">`;
+    g.items.forEach(v => {
+      const on = variant && variant.id === v.id;
+      html += `<button class="variant-chip ${on ? 'active' : ''}" data-variant="${v.id}" style="${on ? `background:${session.accent}; border-color:${session.accent}` : ''}">${v.label}</button>`;
+    });
+    html += `</div>`;
+  });
+  html += `</div>`;
+  return html;
 }
 
 function render() {
   renderDaySelector();
   const session = SESSIONS[state.active];
+  const { view, prefix, variant } = currentView(session);
   const content = document.getElementById("content");
-  const allExos = session.blocks.flatMap(b => b.exercises);
-  const doneCount = allExos.filter(e => state.checked[`${session.id}:${e.id}`]).length;
+  const blocks = view.blocks || [];
+  const allExos = blocks.flatMap(b => b.exercises);
+  const doneCount = allExos.filter(e => state.checked[`${prefix}:${e.id}`]).length;
   const progress = allExos.length ? (doneCount / allExos.length) * 100 : 0;
+
+  const title = view.title || (session.variants ? "À choisir" : "");
+  const meta = view.duration ? `${session.dayFull.toUpperCase()} · ${view.duration}` : session.dayFull.toUpperCase();
 
   let html = `
     <div class="fade-in" style="animation: slideUp 0.3s ease">
@@ -375,11 +606,12 @@ function render() {
         <div class="session-top">
           <div class="session-icon" style="background:${session.accent}">${ICONS[session.icon]}</div>
           <div style="flex:1; min-width:0">
-            <div class="session-meta mono-font" style="color:${session.accent}">${session.dayFull.toUpperCase()} · ${session.duration}</div>
-            <h2 class="session-title display-font">${session.title}</h2>
+            <div class="session-meta mono-font" style="color:${session.accent}">${meta}</div>
+            <h2 class="session-title display-font">${title}</h2>
           </div>
         </div>
-        ${!session.rest ? `
+        ${view.desc ? `<div class="session-desc">${view.desc}</div>` : ''}
+        ${!session.rest && allExos.length ? `
           <div class="progress-wrap">
             <div class="progress-labels">
               <span class="progress-label mono-font">PROGRESSION</span>
@@ -393,7 +625,9 @@ function render() {
       </div>
   `;
 
-  session.blocks.forEach((block, bi) => {
+  if (session.variants) html += renderVariantPicker(session, variant);
+
+  blocks.forEach((block, bi) => {
     html += `
       <div class="block">
         <div class="block-header">
@@ -404,7 +638,7 @@ function render() {
         <h3 class="block-name display-font">${block.name}</h3>
     `;
     block.exercises.forEach(exo => {
-      const k = `${session.id}:${exo.id}`;
+      const k = `${prefix}:${exo.id}`;
       const isDone = !!state.checked[k];
       html += `
         <div class="exo-row">
@@ -417,9 +651,9 @@ function render() {
             ${exo.note ? `<div class="exo-note">${exo.note}</div>` : ''}
             ${exo.tracked && !session.rest ? `
               <div class="load-wrap">
-                <span class="load-label">CHARGE</span>
-                <input type="text" class="load-input" data-load="${exo.id}" placeholder="—" value="${state.loads[k] || ''}">
-                <span class="load-unit">kg</span>
+                <span class="load-label">${exo.label || 'CHARGE'}</span>
+                <input type="text" inputmode="decimal" class="load-input" data-load="${exo.id}" placeholder="—" value="${state.loads[k] || ''}">
+                <span class="load-unit">${exo.unit || 'kg'}</span>
               </div>
             ` : ''}
           </div>
@@ -436,30 +670,33 @@ function render() {
       </div>
       <div class="footer-note">
         <div class="footer-title">RAPPEL</div>
-        <div class="footer-text">L'ordre des séances est une suggestion pour bien répartir muscu et course (jamais 2 footings à la suite). Choisis la tuile que tu fais aujourd'hui, peu importe le jour. Les charges sont sauvegardées sur ton téléphone ; les cases se réinitialisent chaque semaine.</div>
+        <div class="footer-text">L'appli s'ouvre sur le jour en cours. Vendredi et samedi, choisis ta séance du jour en haut de la page. Les charges et chronos sont sauvegardés sur ton téléphone ; les cases et les choix de séance se réinitialisent chaque semaine.</div>
       </div>
     </div>
   `;
 
   content.innerHTML = html;
 
-  // Wire up checkboxes
+  content.querySelectorAll('.variant-chip').forEach(btn => {
+    btn.onclick = () => {
+      state.variants[session.id] = btn.dataset.variant;
+      saveVariants();
+      render();
+    };
+  });
+
   content.querySelectorAll('.checkbox').forEach(cb => {
     cb.onclick = () => {
-      const id = cb.dataset.exo;
-      const k = `${session.id}:${id}`;
+      const k = `${prefix}:${cb.dataset.exo}`;
       state.checked[k] = !state.checked[k];
       saveChecked();
       render();
     };
   });
 
-  // Wire up load inputs
   content.querySelectorAll('.load-input').forEach(inp => {
     inp.oninput = () => {
-      const id = inp.dataset.load;
-      const k = `${session.id}:${id}`;
-      state.loads[k] = inp.value;
+      state.loads[`${prefix}:${inp.dataset.load}`] = inp.value;
       saveLoads();
     };
   });
