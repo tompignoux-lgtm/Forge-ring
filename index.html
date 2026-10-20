@@ -247,13 +247,14 @@
 const SESSIONS = [
   {
     id: "legs", day: "LUN", short: "JAMBES", dayFull: "Lundi — Jambes",
-    title: "Jambes — Volume 15+", duration: "70-80 min",
+    title: "Jambes — Force + Volume 15+", duration: "70-80 min",
     icon: "legs", accent: "#D4574A",
-    desc: "Méthode haut volume : 15 répétitions minimum sur chaque série. Choisis une charge qui te laisse 1-2 reps en réserve à la fin.",
+    desc: "SDT lourd en ouverture pour la force, puis méthode haut volume : 15 répétitions minimum sur le reste. Choisis une charge qui te laisse 1-2 reps en réserve à la fin.",
     blocks: [
-      { name: "Bas du corps — haut volume", duration: "70 min", exercises: [
+      { name: "Force + haut volume", duration: "70-80 min", exercises: [
+        { id: "sdt", name: "Soulevé de terre — lourd", scheme: "4 × 4-6", note: "En premier, frais. Récup 3 min — +2,5 kg dès que 4 × 6 passe proprement", tracked: true },
         { id: "squat", name: "Squat barre", scheme: "4 × 15-20", note: "Quand tu passes 20 reps sur toutes les séries → +2,5 kg", tracked: true },
-        { id: "sdt", name: "Soulevé de terre", scheme: "3 × 15", note: "Reps contrôlées, dos neutre — coupe la série dès que le dos s'arrondit", tracked: true },
+        
         { id: "bulg", name: "Fentes bulgares", scheme: "3 × 15 / jambe", note: "Haltères, descente lente", tracked: true },
         { id: "hip", name: "Hip thrust barre", scheme: "3 × 15-20", note: "Pause 1 s en haut, fessiers contractés", tracked: true },
         { id: "moll", name: "Mollets debout", scheme: "4 × 15-20", note: "Amplitude complète, 1 s étiré en bas", tracked: true },
