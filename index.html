@@ -222,6 +222,55 @@
     to { opacity: 1; transform: translateY(0); }
   }
   .fade-in { animation: slideUp 0.3s ease forwards; }
+
+  .sets { margin-top: 10px; }
+  .last-line { font-size: 10px; color: #6B6258; font-family: 'JetBrains Mono', monospace; margin: 6px 0 8px; letter-spacing: 0.02em; }
+  .last-line b { color: #A39989; font-weight: 500; }
+  .set-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; margin-bottom: 4px;
+    border: 1px solid #1E1A16; background: #13100D;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .set-row.done { background: transparent; border-color: transparent; opacity: 0.6; }
+  .set-row.next { border-color: #3A332D; }
+  .set-num { font-family: 'Bebas Neue', sans-serif; font-size: 15px; color: #6B6258; width: 26px; letter-spacing: 0.05em; }
+  .set-input {
+    width: 58px; padding: 8px 4px; text-align: center;
+    background: #0F0D0B; border: 1px solid #2A2520; color: #EDE6DC;
+    font-family: 'JetBrains Mono', monospace; font-size: 16px; outline: none;
+    -webkit-appearance: none; border-radius: 0;
+  }
+  .set-input:focus { border-color: #F47C4A; }
+  .set-input::placeholder { color: #5A5248; }
+  .set-row.done .set-input { border-color: transparent; background: transparent; }
+  .set-unit { font-size: 10px; color: #6B6258; font-family: 'JetBrains Mono', monospace; }
+  .set-x { font-size: 12px; color: #5A5248; }
+  .set-pdc { width: 58px; text-align: center; font-size: 11px; color: #6B6258; font-family: 'JetBrains Mono', monospace; }
+  .set-ok {
+    margin-left: auto; width: 40px; height: 36px; flex-shrink: 0;
+    border: 1.5px solid #3A332D; background: transparent; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+  }
+  .set-ok svg { stroke: #6B6258; }
+  .set-ok.done svg { stroke: #0F0D0B; }
+  .set-tools { display: flex; gap: 14px; margin-top: 6px; }
+  .set-tool { background: none; border: none; color: #6B6258; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; cursor: pointer; padding: 4px 0; }
+
+  .timer {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+    background: #16120E; border-top: 1px solid #2A2520;
+    display: none; align-items: center; gap: 10px;
+  }
+  .timer.on { display: flex; }
+  .timer-label { font-size: 10px; color: #6B6258; letter-spacing: 0.15em; font-family: 'JetBrains Mono', monospace; }
+  .timer-time { font-family: 'Bebas Neue', sans-serif; font-size: 34px; line-height: 1; color: #F47C4A; min-width: 72px; }
+  .timer-time.over { color: #EDE6DC; }
+  .timer-btn { border: 1px solid #2A2520; background: transparent; color: #EDE6DC; font-family: 'JetBrains Mono', monospace; font-size: 12px; padding: 8px 10px; cursor: pointer; }
+  .timer-btn.skip { margin-left: auto; }
+  .timer-bar { position: absolute; top: -1px; left: 0; height: 2px; background: #F47C4A; }
+  body.timing { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
 </style>
 </head>
 <body>
@@ -240,6 +289,17 @@
 <div class="day-selector" id="daySelector"></div>
 
 <div class="content" id="content"></div>
+
+<div class="timer" id="timer">
+  <div class="timer-bar" id="timerBar"></div>
+  <div>
+    <div class="timer-label" id="timerLabel">RÉCUP</div>
+    <div class="timer-time" id="timerTime">0:00</div>
+  </div>
+  <button class="timer-btn" id="timerMinus">−15</button>
+  <button class="timer-btn" id="timerPlus">+15</button>
+  <button class="timer-btn skip" id="timerSkip">PASSER</button>
+</div>
 
 <script>
 // Semaine fixe : index 0 = lundi … 6 = dimanche.
@@ -533,11 +593,146 @@ const state = {
   checked: readJSON(`checked:${weekKey()}`),
   loads: readJSON("loads"),
   variants: readJSON(`variants:${weekKey()}`),
+  sets: readJSON(`sets:${weekKey()}`),
+  history: readJSON("history"),
 };
 
 function saveChecked() { writeJSON(`checked:${weekKey()}`, state.checked); }
 function saveLoads() { writeJSON("loads", state.loads); }
 function saveVariants() { writeJSON(`variants:${weekKey()}`, state.variants); }
+function saveSets() { writeJSON(`sets:${weekKey()}`, state.sets); }
+function saveHistory() { writeJSON("history", state.history); }
+
+// ---------- Séries ----------
+// "4 × 15-20" → { n: 4, reps: "15", unit: "reps" } ; "3 × 45 s" → unit "s" ; "3 × max" → reps "max"
+function parseScheme(scheme) {
+  const m = /^(\d+)\s*×\s*(.+)$/.exec(scheme || "");
+  if (!m) return null;
+  const rest = m[2];
+  const num = /(\d+)/.exec(rest);
+  const isSec = /^\s*\d+\s*s\b/.test(rest);
+  return { n: parseInt(m[1], 10), reps: /max/.test(rest) ? "max" : (num ? num[1] : ""), unit: isSec ? "s" : "reps" };
+}
+
+function usesSets(session, exo) {
+  return !session.rest && !session.variants && !!parseScheme(exo.scheme);
+}
+
+// Temps de récup : "Récup 3 min" dans la note, sinon 3 min pour le lourd (≤ 6 reps), 90 s sinon
+function restFor(exo) {
+  const m = /Récup\s+(\d+)\s*min/i.exec(exo.note || "");
+  if (m) return parseInt(m[1], 10) * 60;
+  const p = parseScheme(exo.scheme);
+  if (p && p.reps !== "max" && p.unit === "reps" && parseInt(p.reps, 10) <= 6) return 180;
+  return 90;
+}
+
+function getSets(k, exo) {
+  const p = parseScheme(exo.scheme);
+  let arr = state.sets[k];
+  if (!arr) arr = [];
+  while (arr.length < p.n) arr.push({ kg: "", reps: "", done: false });
+  state.sets[k] = arr;
+  return arr;
+}
+
+// Dernière séance d'une semaine précédente
+function lastTime(k) {
+  const h = state.history[k];
+  if (!h) return null;
+  const weeks = Object.keys(h).filter(w => w !== weekKey()).sort((a, b) => {
+    const [ya, wa] = a.split("-W").map(Number), [yb, wb] = b.split("-W").map(Number);
+    return yb - ya || wb - wa;
+  });
+  return weeks.length ? h[weeks[0]] : null;
+}
+
+function recordHistory(k) {
+  const done = (state.sets[k] || []).filter(s => s.done).map(s => ({ kg: s.kg, reps: s.reps }));
+  state.history[k] = state.history[k] || {};
+  if (done.length) state.history[k][weekKey()] = done; else delete state.history[k][weekKey()];
+  // on garde les 12 dernières semaines
+  const ws = Object.keys(state.history[k]).sort();
+  while (ws.length > 12) delete state.history[k][ws.shift()];
+  saveHistory();
+}
+
+function fmtSets(list, withKg) {
+  return list.map(s => withKg && s.kg ? `${s.kg}×${s.reps}` : `${s.reps}`).join(" · ");
+}
+
+// Valeurs proposées par défaut (placeholder) pour une série
+function suggest(k, exo, i, arr) {
+  const p = parseScheme(exo.scheme);
+  const last = lastTime(k);
+  let prev = null;
+  for (let j = i - 1; j >= 0; j--) if (arr[j].kg) { prev = arr[j]; break; }
+  const kg = (prev && prev.kg) || (last && last[i] && last[i].kg) || (last && last.length && last[last.length - 1].kg) || state.loads[k] || "";
+  const reps = (last && last[i] && last[i].reps) || (p.reps === "max" ? "" : p.reps);
+  return { kg, reps };
+}
+
+// ---------- Minuteur de récup ----------
+const timer = { end: 0, total: 0, id: null };
+function startTimer(sec, label) {
+  timer.total = sec; timer.end = Date.now() + sec * 1000;
+  document.getElementById("timerLabel").textContent = label || "RÉCUP";
+  document.getElementById("timer").classList.add("on");
+  document.body.classList.add("timing");
+  clearInterval(timer.id);
+  timer.id = setInterval(tickTimer, 250);
+  tickTimer();
+}
+function stopTimer() {
+  clearInterval(timer.id); timer.id = null;
+  document.getElementById("timer").classList.remove("on");
+  document.body.classList.remove("timing");
+}
+function tickTimer() {
+  const left = Math.round((timer.end - Date.now()) / 1000);
+  const el = document.getElementById("timerTime");
+  const a = Math.abs(left);
+  el.textContent = `${left < 0 ? "+" : ""}${Math.floor(a / 60)}:${String(a % 60).padStart(2, "0")}`;
+  el.classList.toggle("over", left < 0);
+  document.getElementById("timerBar").style.width = `${Math.max(0, Math.min(100, (left / timer.total) * 100))}%`;
+  if (left === 0) { try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {} }
+  if (left < -300) stopTimer();
+}
+document.getElementById("timerSkip").onclick = stopTimer;
+document.getElementById("timerPlus").onclick = () => { timer.end += 15000; timer.total += 15; tickTimer(); };
+document.getElementById("timerMinus").onclick = () => { timer.end -= 15000; tickTimer(); };
+
+const SET_CHECK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+function renderSets(session, exo, k) {
+  const arr = getSets(k, exo);
+  const p = parseScheme(exo.scheme);
+  const withKg = !!exo.tracked;
+  const last = lastTime(k);
+  const nextIdx = arr.findIndex(s => !s.done);
+  let html = `<div class="sets">`;
+  if (last && last.length) html += `<div class="last-line">DERNIÈRE FOIS : <b>${fmtSets(last, withKg)}</b></div>`;
+  arr.forEach((s, i) => {
+    const sg = suggest(k, exo, i, arr);
+    const isNext = i === nextIdx;
+    html += `
+      <div class="set-row ${s.done ? 'done' : ''} ${isNext ? 'next' : ''}">
+        <span class="set-num">S${i + 1}</span>
+        ${withKg ? `
+          <input class="set-input" type="text" inputmode="decimal" data-set="${i}" data-f="kg" data-exo="${exo.id}" value="${s.kg}" placeholder="${sg.kg || 'kg'}">
+          <span class="set-unit">kg</span><span class="set-x">×</span>
+        ` : `<span class="set-pdc">PDC</span><span class="set-x">×</span>`}
+        <input class="set-input" type="text" inputmode="numeric" data-set="${i}" data-f="reps" data-exo="${exo.id}" value="${s.reps}" placeholder="${sg.reps || p.reps || '—'}">
+        <span class="set-unit">${p.unit}</span>
+        <button class="set-ok ${s.done ? 'done' : ''}" data-set="${i}" data-exo="${exo.id}" style="${s.done ? `background:${session.accent}; border-color:${session.accent}` : (isNext ? `border-color:${session.accent}` : '')}">${SET_CHECK}</button>
+      </div>`;
+  });
+  html += `<div class="set-tools">
+      <button class="set-tool" data-add="${exo.id}">+ SÉRIE</button>
+      ${arr.length > p.n ? `<button class="set-tool" data-del="${exo.id}">− SÉRIE</button>` : ''}
+    </div></div>`;
+  return html;
+}
 
 // Séance affichée (avec la variante choisie si la journée en propose)
 function currentView(session) {
@@ -565,7 +760,7 @@ function renderDaySelector() {
     ds.appendChild(btn);
   });
   const activeBtn = ds.children[state.active];
-  if (activeBtn && activeBtn.scrollIntoView) activeBtn.scrollIntoView({ inline: "center", block: "nearest" });
+  if (activeBtn) ds.scrollLeft = activeBtn.offsetLeft - (ds.clientWidth - activeBtn.offsetWidth) / 2;
 }
 
 function renderVariantPicker(session, variant) {
@@ -650,7 +845,7 @@ function render() {
             <div class="exo-name ${isDone ? 'done' : ''}">${exo.name}</div>
             <div class="exo-scheme ${isDone ? 'done' : ''}" style="color:${session.accent}">${exo.scheme}</div>
             ${exo.note ? `<div class="exo-note">${exo.note}</div>` : ''}
-            ${exo.tracked && !session.rest ? `
+            ${usesSets(session, exo) ? renderSets(session, exo, k) : exo.tracked && !session.rest ? `
               <div class="load-wrap">
                 <span class="load-label">${exo.label || 'CHARGE'}</span>
                 <input type="text" inputmode="decimal" class="load-input" data-load="${exo.id}" placeholder="—" value="${state.loads[k] || ''}">
@@ -671,7 +866,7 @@ function render() {
       </div>
       <div class="footer-note">
         <div class="footer-title">RAPPEL</div>
-        <div class="footer-text">L'appli s'ouvre sur le jour en cours. Vendredi et samedi, choisis ta séance du jour en haut de la page. Les charges et chronos sont sauvegardés sur ton téléphone ; les cases et les choix de séance se réinitialisent chaque semaine.</div>
+        <div class="footer-text">L'appli s'ouvre sur le jour en cours. Vendredi et samedi, choisis ta séance du jour en haut de la page. En muscu, valide chaque série avec ✓ : si tu ne tapes rien, la charge et les reps proposées en gris sont enregistrées, et le chrono de récup démarre. « Dernière fois » te montre ta séance de la semaine précédente. Tout est sauvegardé sur ton téléphone ; les cases se réinitialisent chaque semaine.</div>
       </div>
     </div>
   `;
@@ -699,6 +894,64 @@ function render() {
     inp.oninput = () => {
       state.loads[`${prefix}:${inp.dataset.load}`] = inp.value;
       saveLoads();
+    };
+  });
+
+  // Séries : saisie
+  content.querySelectorAll('.set-input').forEach(inp => {
+    inp.oninput = () => {
+      const k = `${prefix}:${inp.dataset.exo}`;
+      const s = state.sets[k][+inp.dataset.set];
+      s[inp.dataset.f] = inp.value.replace(",", ".");
+      saveSets();
+      if (s.done) recordHistory(k);
+    };
+  });
+
+  // Séries : valider / annuler
+  content.querySelectorAll('.set-ok').forEach(btn => {
+    btn.onclick = () => {
+      const exo = allExos.find(e => e.id === btn.dataset.exo);
+      const k = `${prefix}:${exo.id}`;
+      const arr = state.sets[k];
+      const i = +btn.dataset.set;
+      const s = arr[i];
+      if (!s.done) {
+        const sg = suggest(k, exo, i, arr);
+        if (exo.tracked && !s.kg) s.kg = sg.kg;
+        if (!s.reps) s.reps = sg.reps;
+        if (!s.reps) {  // ex. "max" : il faut taper le nombre fait
+          const inp = content.querySelector(`input[data-exo="${exo.id}"][data-set="${i}"][data-f="reps"]`);
+          if (inp) inp.focus();
+          return;
+        }
+        s.done = true;
+        if (exo.tracked && s.kg) { state.loads[k] = s.kg; saveLoads(); }
+        const allDone = arr.every(x => x.done);
+        if (allDone) { state.checked[k] = true; saveChecked(); }
+        startTimer(restFor(exo), allDone ? "RÉCUP · EXO SUIVANT" : `RÉCUP · AVANT S${i + 2}`);
+      } else {
+        s.done = false;
+        state.checked[k] = false; saveChecked();
+      }
+      saveSets(); recordHistory(k);
+      render();
+    };
+  });
+
+  content.querySelectorAll('[data-add]').forEach(btn => {
+    btn.onclick = () => {
+      const k = `${prefix}:${btn.dataset.add}`;
+      state.sets[k].push({ kg: "", reps: "", done: false });
+      state.checked[k] = false; saveChecked(); saveSets(); render();
+    };
+  });
+  content.querySelectorAll('[data-del]').forEach(btn => {
+    btn.onclick = () => {
+      const k = `${prefix}:${btn.dataset.del}`;
+      state.sets[k].pop();
+      if (state.sets[k].every(x => x.done)) { state.checked[k] = true; saveChecked(); }
+      saveSets(); recordHistory(k); render();
     };
   });
 
